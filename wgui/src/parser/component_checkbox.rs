@@ -92,7 +92,6 @@ pub fn parse_component_checkbox(
 			value: component_value,
 			tooltip: tooltip.get_info(),
 			color_checked: None,
-			color_unchecked: None,
 		},
 	)?;
 

@@ -32,7 +32,6 @@ pub struct Params {
 	pub text: Translation,
 	pub style: taffy::Style,
 	pub color_checked: Option<Color>,
-	pub color_unchecked: Option<Color>,
 	pub box_size: f32,
 	pub checked: bool,
 	pub radio_group: Option<Rc<ComponentRadioGroup>>,
@@ -46,7 +45,6 @@ impl Default for Params {
 			text: Translation::from_raw_text(""),
 			style: Default::default(),
 			color_checked: None,
-			color_unchecked: None,
 			box_size: 24.0,
 			checked: false,
 			radio_group: None,
@@ -90,7 +88,6 @@ struct Data {
 	radio_group: Option<Weak<ComponentRadioGroup>>,
 
 	color_checked: Color,
-	color_unchecked: Color,
 }
 
 pub struct ComponentCheckbox {
@@ -98,6 +95,8 @@ pub struct ComponentCheckbox {
 	data: Rc<Data>,
 	state: Rc<RefCell<State>>,
 }
+
+const COLOR_UNCHECKED: Color = Color::new(0.0, 0.0, 0.0, 0.0);
 
 impl ComponentTrait for ComponentCheckbox {
 	fn base(&self) -> &ComponentBase {
@@ -115,11 +114,7 @@ impl ComponentTrait for ComponentCheckbox {
 
 fn set_box_checked(widgets: &layout::WidgetMap, data: &Data, checked: bool) {
 	widgets.call(data.id_inner_box, |rect: &mut WidgetRectangle| {
-		rect.params.color = if checked {
-			data.color_checked
-		} else {
-			data.color_unchecked
-		}
+		rect.params.color = if checked { data.color_checked } else { COLOR_UNCHECKED }
 	});
 }
 
@@ -352,22 +347,7 @@ pub fn construct(ess: &mut ConstructEssentials, params: Params) -> anyhow::Resul
 		(WLength::Units(5.0), WLength::Units(8.0))
 	};
 
-	let color_checked = if let Some(color) = params.color_checked {
-		color
-	} else {
-		theme.accent_color
-	};
-
-	let color_unchecked = if let Some(color) = params.color_unchecked {
-		color
-	} else {
-		Color {
-			r: color_checked.r,
-			g: color_checked.g,
-			b: color_checked.b,
-			a: 0.0,
-		}
-	};
+	let color_checked = params.color_checked.unwrap_or(theme.accent_color);
 
 	let (root, _) = ess.layout.add_child(
 		ess.parent,
@@ -409,7 +389,7 @@ pub fn construct(ess: &mut ConstructEssentials, params: Params) -> anyhow::Resul
 		outer_box.id,
 		WidgetRectangle::create(WidgetRectangleParams {
 			round: round_5,
-			color: if params.checked { color_checked } else { color_unchecked },
+			color: if params.checked { color_checked } else { COLOR_UNCHECKED },
 			..Default::default()
 		}),
 		taffy::Style {
@@ -440,7 +420,6 @@ pub fn construct(ess: &mut ConstructEssentials, params: Params) -> anyhow::Resul
 		value: params.value,
 		radio_group: params.radio_group.as_ref().map(Rc::downgrade),
 		color_checked,
-		color_unchecked,
 	});
 
 	let state = Rc::new(RefCell::new(State {
