@@ -74,7 +74,7 @@ impl DashFrontend {
         let mut interface = DashInterfaceLive::new();
 
         for p in app.session.config.autostart_apps.clone() {
-            let _ = interface.process_launch(app, false, p)?;
+            let _ = interface.process_launch(app, false, p);
         }
 
         let frontend = frontend::Frontend::new(frontend::InitParams {
